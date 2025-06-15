@@ -75,17 +75,14 @@ export const App: React.FC = () => {
         setTodos(result);
         setCompletedCount(result.filter(t => t.completed).length);
       })
-      .catch(() => showError(ERROR_MESSAGES.LOAD_TODOS))
-      // .finally(() => {
-      //   setLoading(false);
-      // });
+      .catch(() => showError(ERROR_MESSAGES.LOAD_TODOS));
   }, []);
 
-  // useEffect(() => {
-  //   if (!loading) {
-  //     inputRef.current?.focus();
-  //   }
-  // }, [loading]);
+  useEffect(() => {
+    if (!loading) {
+      inputRef.current?.focus();
+    }
+  }, [loading]);
 
   if (!USER_ID) {
     return <UserWarning />;
@@ -210,12 +207,6 @@ export const App: React.FC = () => {
               className="todoapp__new-todo"
               placeholder="What needs to be done?"
               onChange={e => setTitle(e.target.value)}
-              autoFocus
-              // onBlur={() => {
-              //   if (title.trim().length === 0) {
-              //     showError(ERROR_MESSAGES.EMPTY_TITLE);
-              //   }
-              // }}
               disabled={loading}
             />
           </form>
