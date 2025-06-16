@@ -13,11 +13,11 @@ import {
 import { Todo } from './types/Todo';
 import { TodoList } from './components/TodoList/TodoList';
 
-const FILTERS = {
-  ALL: 'all',
-  ACTIVE: 'active',
-  COMPLETED: 'completed',
-};
+enum FILTERS {
+  ALL = 'all',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+}
 
 const ERROR_MESSAGES = {
   LOAD_TODOS: 'Unable to load todos',
@@ -29,12 +29,13 @@ const ERROR_MESSAGES = {
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
-  const [title, setTitle] = useState('');
-  const [filtredField, setFiltredField] = useState(FILTERS.ALL);
-  const [error, setError] = useState<string | null>(null);
-  const [completedCount, setCompletedCount] = useState(0);
+  const [filtredField, setFiltredField] = useState<FILTERS>(FILTERS.ALL); //є в залежності filtredTodos
+  const [completedCount, setCompletedCount] = useState(0); //при зміні може зникати чи з'являтися кнопка 'Clear completed'
+  const [error, setError] = useState<string | null>(null); //впливає на відображення помилок
+  const [title, setTitle] = useState(''); //від нього залежить значення у полі input яке повинно ставати пустим після додавання
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const filtredTodos = useMemo(() => {
     let filtered: Todo[];
 
@@ -57,6 +58,7 @@ export const App: React.FC = () => {
 
     return filtered;
   }, [todos, filtredField]);
+
   const showError = (message: string) => {
     setError(message);
 
@@ -92,23 +94,13 @@ export const App: React.FC = () => {
     setError(null);
   };
 
-  const onFiltr = (field: (typeof FILTERS)[keyof typeof FILTERS]) => {
+  const onFiltr = (field: FILTERS) => {
     if (field === filtredField) {
       return;
     }
 
     setFiltredField(field);
   };
-
-  // const handleChangeTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const newTitle =
-  //   setTitle(e.target.value);
-
-  //   if (e.target.value.trim()) {
-  //     console.log('here');
-  //     showError(ERROR_MESSAGES.EMPTY_TITLE);
-  //   }
-  // };
 
   const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -129,10 +121,10 @@ export const App: React.FC = () => {
     };
 
     addTodo(newTodo)
-      .then(result => {
-        setTodos(prev => [...prev, result]);
+      .then(result => setTodos(prev => [...prev, result]))
+      .catch(() => {
+        showError(ERROR_MESSAGES.ADD_TODO);
       })
-      .catch(() => showError(ERROR_MESSAGES.ADD_TODO))
       .finally(() => {
         setLoading(false);
         setTitle('');
@@ -140,40 +132,41 @@ export const App: React.FC = () => {
   };
 
   const handleDelete = (todoId: number) => {
-    if (todos.find(t => t.id === todoId)?.completed) {
-      setCompletedCount(prev => prev - 1);
-    }
+    const isMinCompleted = todos.find(t => t.id === todoId)?.completed;
 
     deleteTodo(todoId)
       .then(() => {
         setTodos(items => items.filter(i => i.id !== todoId));
+        if (isMinCompleted) {
+          setCompletedCount(prev => prev - 1);
+        }
       })
-      .catch(() => showError(ERROR_MESSAGES.DELETE_TODO));
+      .catch(() => {
+        setError(ERROR_MESSAGES.DELETE_TODO);
+      });
   };
 
   const deleteCompleted = () => {
-    filtredTodos.forEach(t => {
+    todos.forEach(t => {
       if (t.completed) {
         handleDelete(t.id);
       }
     });
-
-    setCompletedCount(0);
   };
 
   const handleUpdate = (todoId: number, completed: boolean) => {
-    if (!completed) {
-      setCompletedCount(prev => prev - 1);
-    } else {
-      setCompletedCount(prev => prev + 1);
-    }
-
     updateTodo(todoId, completed)
       .then(() => {
         setTodos(todosList =>
           todosList.map(t => {
             if (t.id === todoId) {
               return { ...t, completed: completed };
+            }
+
+            if (completed) {
+              setCompletedCount(prev => prev + 1);
+            } else {
+              setCompletedCount(prev => prev - 1);
             }
 
             return t;
