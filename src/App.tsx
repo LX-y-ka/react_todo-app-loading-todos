@@ -3,13 +3,7 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { UserWarning } from './UserWarning';
-import {
-  addTodo,
-  deleteTodo,
-  getTodos,
-  updateTodo,
-  USER_ID,
-} from './api/todos';
+import { getTodos, USER_ID } from './api/todos';
 import { Todo } from './types/Todo';
 import { TodoList } from './components/TodoList/TodoList';
 
@@ -29,7 +23,6 @@ const ERROR_MESSAGES = {
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [loading, setLoading] = useState(false);
   const [filtredField, setFiltredField] = useState<FILTERS>(FILTERS.ALL); //є в залежності filtredTodos
   const [completedCount, setCompletedCount] = useState(0); //при зміні може зникати чи з'являтися кнопка 'Clear completed'
   const [error, setError] = useState<string | null>(null); //впливає на відображення помилок
@@ -80,12 +73,6 @@ export const App: React.FC = () => {
       .catch(() => showError(ERROR_MESSAGES.LOAD_TODOS));
   }, []);
 
-  useEffect(() => {
-    if (!loading) {
-      inputRef.current?.focus();
-    }
-  }, [loading]);
-
   if (!USER_ID) {
     return <UserWarning />;
   }
@@ -102,79 +89,79 @@ export const App: React.FC = () => {
     setFiltredField(field);
   };
 
-  const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
+  // const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   setLoading(true);
 
-    if (!title.trim()) {
-      setLoading(false);
-      setTitle('');
-      showError(ERROR_MESSAGES.EMPTY_TITLE);
+  //   if (!title.trim()) {
+  //     setLoading(false);
+  //     setTitle('');
+  //     showError(ERROR_MESSAGES.EMPTY_TITLE);
 
-      return;
-    }
+  //     return;
+  //   }
 
-    const newTodo = {
-      title: title.trim(),
-      userId: USER_ID,
-      completed: false,
-    };
+  //   const newTodo = {
+  //     title: title.trim(),
+  //     userId: USER_ID,
+  //     completed: false,
+  //   };
 
-    addTodo(newTodo)
-      .then(result => setTodos(prev => [...prev, result]))
-      .catch(() => {
-        showError(ERROR_MESSAGES.ADD_TODO);
-      })
-      .finally(() => {
-        setLoading(false);
-        setTitle('');
-      });
-  };
+  //   addTodo(newTodo)
+  //     .then(result => setTodos(prev => [...prev, result]))
+  //     .catch(() => {
+  //       showError(ERROR_MESSAGES.ADD_TODO);
+  //     })
+  //     .finally(() => {
+  //       setLoading(false);
+  //       setTitle('');
+  //     });
+  // };
 
-  const handleDelete = (todoId: number) => {
-    const isMinCompleted = todos.find(t => t.id === todoId)?.completed;
+  // const handleDelete = (todoId: number) => {
+  //   const isMinCompleted = todos.find(t => t.id === todoId)?.completed;
 
-    deleteTodo(todoId)
-      .then(() => {
-        setTodos(items => items.filter(i => i.id !== todoId));
-        if (isMinCompleted) {
-          setCompletedCount(prev => prev - 1);
-        }
-      })
-      .catch(() => {
-        setError(ERROR_MESSAGES.DELETE_TODO);
-      });
-  };
+  //   deleteTodo(todoId)
+  //     .then(() => {
+  //       setTodos(items => items.filter(i => i.id !== todoId));
+  //       if (isMinCompleted) {
+  //         setCompletedCount(prev => prev - 1);
+  //       }
+  //     })
+  //     .catch(() => {
+  //       setError(ERROR_MESSAGES.DELETE_TODO);
+  //     });
+  // };
 
-  const deleteCompleted = () => {
-    todos.forEach(t => {
-      if (t.completed) {
-        handleDelete(t.id);
-      }
-    });
-  };
+  // const deleteCompleted = () => {
+  //   todos.forEach(t => {
+  //     if (t.completed) {
+  //       handleDelete(t.id);
+  //     }
+  //   });
+  // };
 
-  const handleUpdate = (todoId: number, completed: boolean) => {
-    updateTodo(todoId, completed)
-      .then(() => {
-        setTodos(todosList =>
-          todosList.map(t => {
-            if (t.id === todoId) {
-              return { ...t, completed: completed };
-            }
+  // const handleUpdate = (todoId: number, completed: boolean) => {
+  //   updateTodo(todoId, completed)
+  //     .then(() => {
+  //       setTodos(todosList =>
+  //         todosList.map(t => {
+  //           if (t.id === todoId) {
+  //             return { ...t, completed: completed };
+  //           }
 
-            if (completed) {
-              setCompletedCount(prev => prev + 1);
-            } else {
-              setCompletedCount(prev => prev - 1);
-            }
+  //           if (completed) {
+  //             setCompletedCount(prev => prev + 1);
+  //           } else {
+  //             setCompletedCount(prev => prev - 1);
+  //           }
 
-            return t;
-          }),
-        );
-      })
-      .catch(() => showError(ERROR_MESSAGES.UPDATE_TODO));
-  };
+  //           return t;
+  //         }),
+  //       );
+  //     })
+  //     .catch(() => showError(ERROR_MESSAGES.UPDATE_TODO));
+  // };
 
   return (
     <div className="todoapp">
@@ -190,7 +177,7 @@ export const App: React.FC = () => {
           />
 
           {/* Add a todo on form submit */}
-          <form onSubmit={handleAdd}>
+          <form>
             <input
               ref={inputRef}
               value={title}
@@ -200,15 +187,10 @@ export const App: React.FC = () => {
               className="todoapp__new-todo"
               placeholder="What needs to be done?"
               onChange={e => setTitle(e.target.value)}
-              disabled={loading}
             />
           </form>
         </header>
-        <TodoList
-          todos={filtredTodos}
-          onCheck={handleUpdate}
-          onDelete={handleDelete}
-        />
+        <TodoList todos={filtredTodos} />
 
         {/* Hide the footer if there are no todos */}
         {todos.length > 0 && (
@@ -253,7 +235,6 @@ export const App: React.FC = () => {
                 type="button"
                 className="todoapp__clear-completed"
                 data-cy="ClearCompletedButton"
-                onClick={() => deleteCompleted()}
               >
                 Clear completed
               </button>
