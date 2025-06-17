@@ -1,5 +1,6 @@
 import React from 'react';
 import { Todo } from '../../types/Todo';
+import cn from 'classnames';
 
 type Props = {
   todo: Todo;
@@ -8,8 +9,15 @@ type Props = {
 };
 
 export const TodoInfo: React.FC<Props> = React.memo(({ todo }) => {
+  const { title, completed } = todo;
+
   return (
-    <div data-cy="Todo" className={`todo ${todo.completed ? 'completed' : ''}`}>
+    <div
+      data-cy="Todo"
+      className={cn('todo', {
+        completed: completed,
+      })}
+    >
       {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
       <label className="todo__status-label">
         <input
@@ -17,12 +25,12 @@ export const TodoInfo: React.FC<Props> = React.memo(({ todo }) => {
           data-cy="TodoStatus"
           type="checkbox"
           className="todo__status"
-          checked={todo.completed}
+          checked={completed}
         />
       </label>
 
       <span data-cy="TodoTitle" className="todo__title">
-        {todo.title}
+        {title}
       </span>
 
       {/* Remove button appears only on hover */}
